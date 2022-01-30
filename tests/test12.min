@@ -1,0 +1,13 @@
+def test(&a)        # es wird geprüft, ob das Argument eine Variable oder Referenz ist
+  a = a + 2         # dann wird eine lokale Referenz erzeugt mit index der Argument-Variable
+  meine(a)          # a wird als Argument weitergegeben.
+
+def meine(& b)      # die aufnehmende Funktion muss nicht prüfen, ob das Argument eine Referenz oder Variable ist
+  b = b + 1         # die lokale Referenz b erhält den Index von a und damit den Index von z wie es sein soll.
+
+z = 10              # damit können Referenzen "durchgereicht" werden, existieren aber auch immer.
+print z
+test(z)
+print z
+
+# Ausdruck: 10, 13

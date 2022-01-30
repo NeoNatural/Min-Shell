@@ -1,0 +1,69 @@
+Extended Backus-Naur-Form (EBNF) of 'Min' v0.90
+-----------------------------------------------
+by Carsten Herting (slu4) 2022
+
+letter          = 'a' | ... | 'z' | 'A' | ... | 'Z' ;
+digit           = '0' | ... | '9' ;
+rel-op          = '==' | '!=' | '<' | '>' | '<=' | '>=' ;
+str-op          = '==' | '!=' ;
+add-op          = '+'  | '-' ;
+mul-op          = '*'  | '/' ;
+number          = digit, { digit } ;
+identifier      = letter, { letter | digit | '_' } ;
+whitespace      = ' ' | '\r' | '\t' | ':' | ';' ;
+character       = ? any ASCII character ? ;
+
+file            = { statement }, { NEWLINE }, ENDMARKER ;
+statement       = { NEWLINE }, ? OKDENT ?, simple-line | compound-stmt ;
+simple-line     = simple-stmt, { simple-stmt }, NEWLINE ;
+
+simple-stmt     = 'print', expr-list
+                | 'break'
+                | 'return', [ expr ]
+                | identifier, '(', [ expr-list ], ')'           (* sub call *)
+                | identifier, '=', expr ;                       (* assignment *)
+
+compound-stmt   = 'if', bool-expr, block,
+                  { { NEWLINE }, ? OKDENT ?, 'elif', block },
+                  [ { NEWLINE }, ? OKDENT ?, 'else', block ]
+                | 'while', bool-expr, block
+                | 'def', ? NODENT ?, identifier, '(', [ param-list ], ')', block ;
+
+block           = NEWLINE, ? INDENT ?, statement, { statement }, ? DEDENT ?
+                | simple-line ;
+
+expr            = array-expr | math-expr ;
+expr-list       = expr, { ',', expr } ;
+param-list  		= [ '&' ], identifier, { ',', [ '&' ], identifier } ;
+
+array           = '[', [ math-expr, { ',', math-expr } ], ']'   (* returns int[] *)
+                | '"', {character}, '"'                         (* returns chr[] *)
+                | 'str', '(', math-expr, ')'                    (* returns chr[] *)
+                | 'input', '(', ')'                             (* returns chr[] *)             
+                | identifier, '(', [ expr-list ], ')'
+                | identifier
+                | array, '[', math-expr, '..', math-expr, ']' ; (* array slicing *)
+array-expr      = array { '+' array } ;                         (* concatenation *)
+
+math-factor     = '(', math-expr, ')'
+                | number
+                | "'", character, "'"
+                | 'key', '(', ')'
+                | 'int', '(', string-expr, ')'
+                | 'len', '(', array-expr, ')'
+                | 'random', '(', ')'
+                | identifier '(', [ expr-list ], ')'
+                | identifier
+                | array, '[', math-expr, ']' ;                  (* element access *)
+math-term       = math-factor, { mul-op, math-factor } ;
+math-expr       = [ add-op ], math-term { add-op, math-term } ;
+
+bool-factor     = [ 'not' ], math-expr, [ rel-op, math-expr ]
+                | [ 'not' ], array-expr, [ str-op, array-expr ] ;
+bool-term       = bool-factor, { 'and', bool-factor } ;
+bool-expr       = bool-term, { 'or', bool-term } ;
+
+
+
+
+
