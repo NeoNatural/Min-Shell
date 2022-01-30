@@ -1,5 +1,6 @@
 # Min Is Not Python...
-... but a computer language I develop for fun. Min is written in 230 lines of Python code
+... but a computer language I develop for fun. Min is written in 230 lines of Python code.
+
 Visit my YouTube channel for more information: https://www.youtube.com/channel/UCXYQcMpUBT3aaQKfmAVJNow
 
 
