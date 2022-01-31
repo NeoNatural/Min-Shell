@@ -1,6 +1,5 @@
-Extended Backus-Naur-Form (EBNF) of 'Min' v0.90
------------------------------------------------
-by Carsten Herting (slu4) 2022
+Extended Backus-Naur-Form (EBNF) of MIN
+---------------------------------------
 
 letter          = 'a' | ... | 'z' | 'A' | ... | 'Z' ;
 digit           = '0' | ... | '9' ;
@@ -63,7 +62,13 @@ bool-factor     = [ 'not' ], math-expr, [ rel-op, math-expr ]
 bool-term       = bool-factor, { 'and', bool-factor } ;
 bool-expr       = bool-term, { 'or', bool-term } ;
 
+Copyright 2022 Carsten Herting (slu4)
 
-
-
-
+LICENSING INFORMATION
+This file is part of MIN. MIN is free software: you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software Foundation, either
+version 3 of the License, or (at your option) any later version.
+MIN is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
+implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public
+License for more details. You should have received a copy of the GNU General Public License along
+with this program. If not, see https://www.gnu.org/licenses/.
