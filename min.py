@@ -1,9 +1,12 @@
-def IsDigit(c): return (c >= "0" and c <= "9")							# MIN version 0.90 - by Carsten Herting 30.01.2022
+# MIN Programming Language - last update 31.1.2022
+# See end of file for licensing information.
+
+def IsDigit(c): return (c >= "0" and c <= "9")
 def IsAlpha(c): return ((c >= "a" and c <= "z") or (c >= "A" and c <= "Z"))
 def IsAlNum(c): return (IsDigit(c) or IsAlpha(c) or c == "_")
 # ----------------------------------------------------------------------------------------------------------------
 def Look():																									# return the character at the current position
-	if (k:= file[g.pc]) == "#":																			# ignore line comments
+	if (k:= file[g.pc]) == "#":																# ignore line comments
 		while (k := file[g.pc]) != "\n" and k != "\0": g.pc += 1
 	return k
 
@@ -266,3 +269,14 @@ try: f = open(sys.argv[1], "r")
 except: print("ERROR: Cannot find \'" + sys.argv[1] + "\'."); exit(1)
 file = f.read() + "\0"; f.close()														# append a null termination
 while Look() != '\0': ErrorIf(not Statement(), "unexpected indent")
+
+# Copyright 2022 Carsten Herting (slu4)
+
+# LICENSING INFORMATION
+# This file is part of MIN. MIN is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software Foundation, either
+# version 3 of the License, or (at your option) any later version.
+# MIN is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
+# implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public
+# License for more details. You should have received a copy of the GNU General Public License along
+# with this program. If not, see https://www.gnu.org/licenses/. 
