@@ -1,4 +1,5 @@
-# MIN Programming Language - last update 31.1.2022
+# MIN Programming Language
+# Copyright 2022 Carsten Herting (slu4) - last update 04.02.2022
 # See end of file for licensing information.
 
 def IsDigit(c): return (c >= "0" and c <= "9")
@@ -11,8 +12,8 @@ def Look():																									# return the character at the current positi
 	return k
 
 def Take():																									# takes the current character, moves forward...
-	if (c:= Look()) == "\n": g.ist = 0; g.cnt = True					# ... and measures line indentation
-	elif g.cnt: g.cnt = 1*(c == " ") + 2*(c == "\t"); g.ist += g.cnt
+	if (c:= Look()) == "\n": g.m_ind = 0; g.cnt = True				# ... and measures line indentation
+	elif g.cnt: g.cnt = 1*(c == " ") + 2*(c == "\t"); g.m_ind += g.cnt
 	g.pc += 1; return c
 
 def TakeThis(s):																						# takes only a specific string
@@ -43,7 +44,7 @@ def TakeUntil(c):																						# takes until (including!) c or '\0'
 def SkipToIndent(indent):																		# spools over block without processing
 	TakeUntil("\n")																						# eat line
 	while Look() != "\0":
-		if Next() != "\n" and g.ist <= indent: break						# break on non-empty target indent (or less)
+		if Next() != "\n" and g.m_ind <= indent: break					# break on non-empty target indent (or less)
 		TakeUntil("\n")																					# otherwise eat the line
 # ----------------------------------------------------------------------------------------------------------------
 def BooleanFactor():
@@ -99,13 +100,13 @@ def MathTerm(use=False, m=0):
 		else: m = int(m / MathFactor())													# make sure division yields an integer
 	return m
 
-def MathExpr(use=False, m=0):																		# user specifies pre-scanned FACTOR
+def MathExpr(use=False, m=0):																# user specifies pre-scanned FACTOR
 	if use: m = MathTerm(use, m)
-	elif Next() == "-": Take(); m = -MathTerm()				# leading minus?
-	else: Grab("+"); m = MathTerm()										# either no or leading sign or leading plus
+	elif Next() == "-": Take(); m = -MathTerm()								# leading minus?
+	else: Grab("+"); m = MathTerm()														# either no or leading sign or leading plus
 	while Next() == "+" or Look() == "-":	
-		if Take() == "+": m = m + MathTerm()						# addition						
-		else: m = m - MathTerm()												# subtraction
+		if Take() == "+": m = m + MathTerm()										# addition						
+		else: m = m - MathTerm()																# subtraction
 	return m
 # ----------------------------------------------------------------------------------------------------------------
 def Array(use=False, a=0):																	# eltype = ELEMENT TYPE, output-type is eltype + "a"
@@ -145,7 +146,7 @@ def Expr():
 	else: return ("i", MathExpr(True, e[VAL]))								# math variable
 # ----------------------------------------------------------------------------------------------------------------
 def DoCall(key):																						# key must be a valid CALL
-	Assert("("); datalen = len(data); varlen = len(var); oldsol = g.sol; arg = g.pc; g.pc = par = call[key]; isref = False	
+	Assert("("); datalen = len(data); varlen = len(var); arg = g.pc; g.pc = par = call[key]; isref = False	
 	while not Grab(")"):																			# parse (params) args *before* increasing the sublevel!
 		if Look() == "&": Take(); isref = True									# PARSE A PARAMETER reference variable?
 		Next(); loc = TakeAlNum(); ErrorIf(loc == "", "invalid parameter")	# read in parameter name
@@ -156,8 +157,8 @@ def DoCall(key):																						# key must be a valid CALL
 			if e[TYP][-1:] == "a": data.append(e[VAL][:])					# ENFORCE COPY argument expression into local variable
 			else: data.append(e[VAL])															# primitive types are copied anyway
 		Grab(","); arg = g.pc; g.pc = par
-	oldlop = g.lop; g.lop = 0; g.sub += 1; g.sol = 0; Block(); g.lop = oldlop; g.sol = oldsol; g.sub -= 1
-	g.pc = arg; g.halt = False; Assert(")"); CleanStack(varlen, datalen)	# return to pos after arguments and eat ")"
+	oldloop = g.loop; oldtind = g.t_ind; g.loop = 0; g.sub += 1; g.t_ind = 0; Block(); g.loop = oldloop
+	g.t_ind = oldtind; g.sub -= 1; g.pc = arg; g.halt = False; Assert(")"); CleanStack(varlen, datalen)	# return to pos after arguments and eat ")"
 
 def DoReturn():
 	ErrorIf(g.sub == 0, "unexpected return")
@@ -172,31 +173,31 @@ def DoPrint():
 		if not Grab(","): return
 
 def DoWhile():
-	while_pc = g.pc; out = g.out; g.out = g.sol; g.lop +=1		# store old bailout indentation, set newone
+	while_pc = g.pc; oldout = g.out_ind; g.out_ind = g.t_ind; g.loop +=1		# store bailout indentation, set newone
 	while BooleanExpr():		
 		Block()																									# a break & skip may occur here...
 		if g.halt: break																				# ... did that happen?
 		g.pc = while_pc																					# ... no, go back
-	else:	SkipToIndent(g.out)																	# regular end of while => skip
-	g.lop -= 1; g.out = out; g.halt = False										# restore old bailout and clear a possible halt
+	else:	SkipToIndent(g.out_ind)															# regular end of while => skip
+	g.loop -= 1; g.out_ind = oldout; g.halt = False						# restore bailout and clear a possible halt
 
-def DoBreak(): ErrorIf(g.lop == 0, "unexpected break"); g.halt = True; SkipToIndent(g.out)	# switch off enclosing loop (while will clear)
+def DoBreak(): ErrorIf(g.loop == 0, "unexpected break"); g.halt = True; SkipToIndent(g.out_ind)	# switch off enclosing loop (while will clear)
 
 def DoIf():
 	if b := BooleanExpr(): Block()
-	else: SkipToIndent(g.sol)
+	else: SkipToIndent(g.t_ind)
 	while Grab("\n"): pass
-	while g.ist == g.sol and TakeThis("elif"):
-		if b: SkipToIndent(g.sol)
+	while g.m_ind == g.t_ind and TakeThis("elif"):
+		if b: SkipToIndent(g.t_ind)
 		elif b := BooleanExpr(): Block()
-		else: SkipToIndent(g.sol)
+		else: SkipToIndent(g.t_ind)
 		while Grab("\n"): pass	
-	if g.ist == g.sol and TakeThis("else"):
+	if g.m_ind == g.t_ind and TakeThis("else"):
 		if not b: Block()
-		else: SkipToIndent(g.sol)
+		else: SkipToIndent(g.t_ind)
 
 def DoDef():																								# only call if indentation = 0!
-	ErrorIf(g.ist > 0, "unexpected def"); Next(); key = TakeAlNum(); Assert("(")
+	ErrorIf(g.m_ind > 0, "unexpected def"); Next(); key = TakeAlNum(); Assert("(")
 	ErrorIf(key == "" or key in call, "invalid subroutine identifier")
 	call[key] = g.pc; TakeUntil(")"); SkipToIndent(0)
 
@@ -204,7 +205,7 @@ def DoAssign(key):
 	vkey = MakeId(key); iselem = False
 	if Grab("["): iselem = True; el = MathExpr(); Assert("]")	# parse element access
 	if not vkey and key and not iselem:												# DECLARATION
-		vkey = key + ("@" + str(g.sub)) * (g.sol != 0)					# extend key if variable is local (inside loop or def)
+		vkey = key + ("@" + str(g.sub)) * (g.t_ind != 0)					# extend key if variable is local (inside loop or def)
 		var[vkey] = ("", len(data)); data.append(0)							# create new dict entry
 	ErrorIf(not vkey, "invalid variable identifier"); Assert("=") 	# a declaration allows for any type
 	if iselem: ErrorIf(el not in range(len(data[var[vkey][VAL]])), "invalid index"); data[var[vkey][VAL]][el] = MathExpr()
@@ -216,14 +217,14 @@ def DoAssign(key):
 # ----------------------------------------------------------------------------------------------------------------
 def Block():
 	if Next() == "\n":
-		varlen = len(var); datalen = len(data); g.sol += 2; ErrorIf(not Statement(), "unexpected end of block")
+		varlen = len(var); datalen = len(data); g.t_ind += 2; ErrorIf(not Statement(), "unexpected end of block")
 		while(Look() != "\0" and Statement()): pass
-		g.sol -= 2; CleanStack(varlen, datalen)
+		g.t_ind -= 2; CleanStack(varlen, datalen)
 	else: varlen = len(var); datalen = len(data); Simple_Stmts(); CleanStack(varlen, datalen)
 	
 def Statement():																						# look ahead and decide what statement type is coming
 	while Grab("\n"): pass
-	if g.ist != g.sol: return False
+	if g.m_ind != g.t_ind: return False
 	pc = g.pc; key = TakeAlNum(); g.pc = pc
 	if key == "if" or  key == "while" or key == "def": Compound_Stmt(); return True
 	else: Simple_Stmts(); return True
@@ -259,9 +260,9 @@ def Error(text):																						# prints information about the error and h
 	print("\nERROR " + text + " in line " + ln + ": '" + line + "'"); exit(1)
 
 # STATE: file index, halt flag, sub and loop level, return value, measured, target, breakout indent
-class g: pc = 0; halt = False; sub = 0; lop = 0; ret = ("?", 0); ist = 0; sol = 0; out = 0; cnt = True
+class g: pc = 0; halt = False; sub = 0; loop = 0; ret = ("?", 0); m_ind = 0; t_ind = 0; out_ind = 0; cnt = True
 call = {}; var = {}; data = []; TYP = 0; VAL = 1						# DICTIONARY { key: (<typ>, <val>) } and DATA storage
-special = { "\\#": 35, "\\\"": 34, "\\\'": 39, "\\n": 10, "\\t": 9, "\\e": 27, "\\0": 0 }		# special sequences
+special = { "\\#": 35, "\\\"": 34, "\\\'": 39, "\\n": 10, "\\r": 13, "\\t": 9, "\\e": 27, "\\0": 0 }		# special sequences
 
 import sys, random; import msvcrt, os; os.system("")
 if len(sys.argv) < 2: print("USAGE: min.py <filename>"); exit(1)
@@ -270,8 +271,6 @@ except: print("ERROR: Cannot find \'" + sys.argv[1] + "\'."); exit(1)
 file = f.read() + "\0"; f.close()														# append a null termination
 while Look() != '\0': ErrorIf(not Statement(), "unexpected indent")
 
-# Copyright 2022 Carsten Herting (slu4)
-
 # LICENSING INFORMATION
 # This file is part of MIN. MIN is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software Foundation, either
@@ -279,4 +278,4 @@ while Look() != '\0': ErrorIf(not Statement(), "unexpected indent")
 # MIN is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public
 # License for more details. You should have received a copy of the GNU General Public License along
-# with this program. If not, see https://www.gnu.org/licenses/. 
+# with this program. If not, see https://www.gnu.org/licenses/.
