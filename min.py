@@ -126,7 +126,7 @@ def Array(use=False, a=0):																	# eltype = ELEMENT TYPE, output-type 
 	else: Error("expecting array type")
 	while Grab("["):																					# this is performed with pre-scanned values
 		i0 = MathExpr()
-		if Grab("]"): ErrorIf(i0 not in range(len(a[VAL])), "bad element index"); ErrorIf(a[TYP][-1:] != "a", "element access without array"); a = ("i", a[VAL][i0])	# ELEMENT OPERATOR
+		if Grab("]"): ErrorIf(a[TYP][-1:] != "a", "element access without array"); ErrorIf(i0 not in range(len(a[VAL])), "bad element index"); a = ("i", a[VAL][i0])	# ELEMENT OPERATOR
 		else: Assert("."); Assert("."); i1 = MathExpr(); Assert(']'); a = (a[TYP], a[VAL][i0:i1])	# SLICING OPERATOR
 	return a
 
@@ -151,7 +151,7 @@ def DoCall(key):																						# key must be a valid CALL
 		if Look() == "&": Take(); isref = True									# PARSE A PARAMETER reference variable?
 		Next(); loc = TakeAlNum(); ErrorIf(loc == "", "invalid parameter")	# read in parameter name
 		Grab(","); par = g.pc; g.pc = arg; loc += "@" + str(g.sub + 1)	# PARSE AN ARGUMENT
-		if isref: Next(); akey = MakeId(TakeAlNum()); ErrorIf(not akey, "invalid reference"); var[loc] = var[akey]
+		if isref: Next(); akey = MakeId(TakeAlNum()); ErrorIf(not akey, "invalid reference"); var[loc] = var[akey]; isref = False
 		else:																										# expect an expression of a certain type
 			e = Expr(); var[loc] = (e[TYP], len(data))
 			if e[TYP][-1:] == "a": data.append(e[VAL][:])					# ENFORCE COPY argument expression into local variable
