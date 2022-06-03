@@ -6,15 +6,15 @@ on the 'Minimal CPU System'. The Python implementation is meant for
 demonstration purposesn only. See the table below for differences.
 
 +-------------------+--------+-------------+------------+----------------------------------+
-| Difference				| Python | Minimal CPU | C++ OpenGL | Description                      |
+| Difference        | Python | Minimal CPU | C++ OpenGL | Description                      |
 +-------------------+--------+-------------+------------+----------------------------------+
-| include						|   -    |      +      |      +     | include additional program text  |
-| HEX numbers				|   -    |      +      |      +     | hexadecimal notation 0xffff      |
-| delay()     			|   -    |      -      |      +     | milliseconds delay function      |
-| str()							|   +    |      #      |      #     | int-to-string conversion         |
-| int()							|   +    |      #      |      #     | string-to-int conversion         |
-| input()						|	  +    |      #      |      #     | line text input                  |
-| ~ & | ^ << >>   	|   -    |      +      |      +     | bitwise operators                |
+| include           |   -    |      +      |      +     | include additional program text  |
+| HEX numbers       |   -    |      +      |      +     | hexadecimal notation 0xffff      |
+| delay()           |   -    |      -      |      +     | milliseconds delay function      |
+| str()             |   +    |      #      |      #     | int-to-string conversion         |
+| int()             |   +    |      #      |      #     | string-to-int conversion         |
+| input()           |    +   |      #      |      #     | line text input                  |
+| ~ & | ^ << >>     |   -    |      +      |      +     | bitwise operators                |
 +-------------------+--------+-------------+------------+----------------------------------+
 # implementation in MIN itself via include "std.min" library.
 
@@ -50,7 +50,7 @@ block           = NEWLINE, ? INDENT ?, statement, { statement }, ? DEDENT ?
 
 expr            = array-expr | math-expr ;
 expr-list       = expr, { ',', expr } ;
-param-list  		= [ '&' ], identifier, { ',', [ '&' ], identifier } ;
+param-list      = [ '&' ], identifier, { ',', [ '&' ], identifier } ;
 
 array           = '[', [ math-expr, { ',', math-expr } ], ']'   (* returns int[] *)
                 | '"', { character }, '"'                       (* returns chr[] *)
