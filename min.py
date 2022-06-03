@@ -1,13 +1,13 @@
 # MIN Programming Language
-# Copyright 2022 Carsten Herting (slu4) - last update 04.02.2022
+# Copyright 2022 Carsten Herting (slu4) - last update 01.06.2022
 # See end of file for licensing information.
 
-def IsDigit(c): return (c >= "0" and c <= "9")
+def IsDigit(c): return (c >= "0" and c <= "9")							# simple recognizer functions
 def IsAlpha(c): return ((c >= "a" and c <= "z") or (c >= "A" and c <= "Z"))
 def IsAlNum(c): return (IsDigit(c) or IsAlpha(c) or c == "_")
 # ----------------------------------------------------------------------------------------------------------------
-def Look():																									# return the character at the current position
-	if (k:= file[g.pc]) == "#":																# ignore line comments
+def Look():																									# returns the character at the current position
+	if (k:= file[g.pc]) == "#":																# and ignores line comments
 		while (k := file[g.pc]) != "\n" and k != "\0": g.pc += 1
 	return k
 
@@ -41,11 +41,11 @@ def Assert(c): ErrorIf(not Grab(c), "character '" + c + "' missing")	# asserts n
 def TakeUntil(c):																						# takes until (including!) c or '\0'
 	while Look() != "\0" and Take() != c: pass
 
-def SkipToIndent(indent):																		# spools over block without processing
-	TakeUntil("\n")																						# eat line
+def SkipToIndent(indent):																		# spools over block without processing it's content
+	TakeUntil("\n")																						# consume rest of current line first
 	while Look() != "\0":
 		if Next() != "\n" and g.m_ind <= indent: break					# break on non-empty target indent (or less)
-		TakeUntil("\n")																					# otherwise eat the line
+		TakeUntil("\n")																					# otherwise consume the line
 # ----------------------------------------------------------------------------------------------------------------
 def BooleanFactor():
 	Next(); inv = (TakeThis("not") == True); e = Expr(); Next()
@@ -78,13 +78,13 @@ def MathFactor():
 		while IsDigit(Look()): m = 10*m + ord(Take()) - ord("0")
 	elif Look() == "\'": Take(); m = TakeOrd(); Assert("\'")
 	elif TakeThis("key"):
-		Assert("("); Assert(")"); m = 0
+		Assert("("); Assert(")"); m = 255
 		if msvcrt.kbhit(): m = ord(msvcrt.getch())
 	elif TakeThis("int"):
 		Assert("("); e = ArrayExpr(); Assert(")"); m = 0; ErrorIf(e[TYP] != "ca", "expecting char array")
 		for c in e[VAL]: m = m + (9*m + c-48) * (c-48 in range(10))
 	elif TakeThis("len"): Assert("("); e = ArrayExpr(); Assert(")"); ErrorIf(e[TYP][-1:] != "a", "expecting array"); m = len(e[VAL])
-	elif TakeThis("random"): Assert("("); Assert(")"); m = random.randrange(0,256)
+	elif TakeThis("rnd"): Assert("("); Assert(")"); m = random.randrange(0,256)
 	elif e := ("?", 0):
 		if (key := TakeAlNum()) in call: DoCall(key); e = g.ret; g.ret = ("?", 0)
 		elif (vkey := MakeId(key)): e = (var[vkey][TYP], data[var[vkey][VAL]])
@@ -151,7 +151,9 @@ def DoCall(key):																						# key must be a valid CALL
 		if Look() == "&": Take(); isref = True									# PARSE A PARAMETER reference variable?
 		Next(); loc = TakeAlNum(); ErrorIf(loc == "", "invalid parameter")	# read in parameter name
 		Grab(","); par = g.pc; g.pc = arg; loc += "@" + str(g.sub + 1)	# PARSE AN ARGUMENT
-		if isref: Next(); akey = MakeId(TakeAlNum()); ErrorIf(not akey, "invalid reference"); var[loc] = var[akey]; isref = False
+		if isref:
+			Next(); akey = MakeId(TakeAlNum()); ErrorIf(not akey, "invalid reference")
+			var[loc] = var[akey]; isref = False
 		else:																										# expect an expression of a certain type
 			e = Expr(); var[loc] = (e[TYP], len(data))
 			if e[TYP][-1:] == "a": data.append(e[VAL][:])					# ENFORCE COPY argument expression into local variable
@@ -257,6 +259,7 @@ def ErrorIf(bool, error):
 def Error(text):																						# prints information about the error and halts
 	ln = str(file[:g.pc].count("\n") + 1)											# line number
 	s = file[:g.pc].rfind("\n") + 1; e = file.find("\n", g.pc); line = file[s:g.pc] + "?" + file[g.pc:e]
+	print(var)
 	print("\nERROR " + text + " in line " + ln + ": '" + line + "'"); exit(1)
 
 # STATE: file index, halt flag, sub and loop level, return value, measured, target, breakout indent
