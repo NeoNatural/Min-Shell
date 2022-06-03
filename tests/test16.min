@@ -1,4 +1,6 @@
+print "PRESS ANY KEY: "
+
 s = "_"
 while 1
   i = key()
-  if i: s[0] = i; print s
+  if i!=255: s[0] = i; print s

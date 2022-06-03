@@ -1,4 +1,3 @@
-
 def test(&a)
   a = a + 10
   print "inside test(): ", a, "\n"
@@ -18,3 +17,5 @@ s = "Hello"
 print "declaration: ", s, "\n"
 text(s)
 print "back: ", s, "\n"
+
+

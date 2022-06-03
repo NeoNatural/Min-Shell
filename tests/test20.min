@@ -1,12 +1,6 @@
-def clearscreen()
-  print "\e[H\e[J"
+def cls() print "\e[H\e[J"
+def pos(x, y) print "\e[" + str(x) + "G\e[" + str(y) + "d"
 
-def goto(x, y)
-  print "\e[" + str(x) + "G\e[" + str(y) + "d"
-
-print "\e[?25l"   # hides the cursor
-clearscreen()
-goto(3,16)
-print "Hallo World! Testing ANSI Escape Sequences - Press RETURN" 
-i = input()
-print "\e[?25h"   # shows the cursor
+cls()
+pos(10, 10)
+print "Hello, World!"

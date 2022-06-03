@@ -1,11 +1,7 @@
-def square(zahl)
-  return zahl * zahl
+def square(num)
+  return num * num
 
-def show(s)
-  print "->" + s[4..len(s)-4] + "<-\n"
-  x=1
-  while x <= 256
-    print x, ":", square(x), " "
-    x=x+1
-
-show("*** SQUARE TABLE ***")
+x=1
+while x <= 256
+  print x, ":", square(x), " "
+  x=x+1
